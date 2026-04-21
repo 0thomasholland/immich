@@ -736,6 +736,7 @@ export enum JobName {
   AssetDetectFaces = 'AssetDetectFaces',
   AssetVideoDetectFacesQueueAll = 'AssetVideoDetectFacesQueueAll',
   AssetVideoDetectFaces = 'AssetVideoDetectFaces',
+  AssetVideoClusterFaces = 'AssetVideoClusterFaces',
   AssetDetectDuplicatesQueueAll = 'AssetDetectDuplicatesQueueAll',
   AssetDetectDuplicates = 'AssetDetectDuplicates',
   AssetEditThumbnailGeneration = 'AssetEditThumbnailGeneration',
