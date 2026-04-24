@@ -34,6 +34,10 @@ const asJobItem = (dto: JobCreateDto): JobItem => {
       return { name: JobName.DatabaseBackup };
     }
 
+    case ManualJobName.VideoFaceDetection: {
+      return { name: JobName.AssetVideoDetectFacesQueueAll, data: {} };
+    }
+
     default: {
       throw new BadRequestException('Invalid job name');
     }

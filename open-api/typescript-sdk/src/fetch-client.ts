@@ -6948,7 +6948,8 @@ export enum ManualJobName {
     UserCleanup = "user-cleanup",
     MemoryCleanup = "memory-cleanup",
     MemoryCreate = "memory-create",
-    BackupDatabase = "backup-database"
+    BackupDatabase = "backup-database",
+    VideoFaceDetection = "video-face-detection"
 }
 export enum QueueName {
     ThumbnailGeneration = "thumbnailGeneration",
