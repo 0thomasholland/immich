@@ -1021,6 +1021,8 @@ describe(PersonService.name, () => {
         id: asset.id,
         originalPath: '/videos/test.mp4',
         visibility: 'hidden' as any,
+        keyframe: null,
+        videoTimeBase: null,
       });
 
       await expect(sut.handleVideoDetectFaces({ id: asset.id })).resolves.toBe(JobStatus.Skipped);
@@ -1033,6 +1035,8 @@ describe(PersonService.name, () => {
         id: asset.id,
         originalPath: '/videos/test.mp4',
         visibility: asset.visibility,
+        keyframe: null,
+        videoTimeBase: null,
       });
       mocks.storage.createTempDir.mockResolvedValue('/tmp/test-frames');
       mocks.media.extractVideoFrames.mockResolvedValue([]);
@@ -1051,6 +1055,8 @@ describe(PersonService.name, () => {
         id: asset.id,
         originalPath: '/videos/test.mp4',
         visibility: asset.visibility,
+        keyframe: null,
+        videoTimeBase: null,
       });
       mocks.storage.createTempDir.mockResolvedValue('/tmp/test-frames');
       mocks.media.extractVideoFrames.mockResolvedValue(['/tmp/test-frames/frame_0001.jpg', '/tmp/test-frames/frame_0002.jpg']);
@@ -1079,6 +1085,8 @@ describe(PersonService.name, () => {
         id: asset.id,
         originalPath: '/videos/test.mp4',
         visibility: asset.visibility,
+        keyframe: null,
+        videoTimeBase: null,
       });
       mocks.storage.createTempDir.mockResolvedValue('/tmp/test-frames');
       mocks.media.extractVideoFrames.mockResolvedValue([
@@ -1106,6 +1114,8 @@ describe(PersonService.name, () => {
         id: asset.id,
         originalPath: '/videos/test.mp4',
         visibility: asset.visibility,
+        keyframe: null,
+        videoTimeBase: null,
       });
       mocks.storage.createTempDir.mockResolvedValue('/tmp/test-frames');
       mocks.media.extractVideoFrames.mockResolvedValue(['/tmp/test-frames/frame_0001.jpg']);

@@ -345,6 +345,7 @@ describe(MediaRepository.name, () => {
       imageWidth: 1000,
       imageHeight: 800,
       sourceType: SourceType.MachineLearning,
+      timestampMs: null,
       isVisible: true,
       updatedAt: new Date(),
       deletedAt: null,
@@ -694,7 +695,7 @@ describe(MediaRepository.name, () => {
     };
 
     const mockProbe = (duration: number) => {
-      vi.mocked(ffmpeg).ffprobe.mockImplementation((_path, _opts, cb: any) =>
+      (vi.mocked(ffmpeg) as any).ffprobe.mockImplementation((_path: any, _opts: any, cb: any) =>
         cb(null, { format: { duration }, streams: [] }),
       );
     };

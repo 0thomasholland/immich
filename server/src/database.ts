@@ -270,6 +270,7 @@ export type AssetFace = {
   imageWidth: number;
   personId: string | null;
   sourceType: SourceType;
+  timestampMs: number | null;
   person?: ShallowDehydrateObject<Person> | null;
   updatedAt: Date;
   updateId: string;

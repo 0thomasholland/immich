@@ -332,7 +332,7 @@ export class MediaRepository {
       ffmpeg(videoPath)
         .outputOptions([`-vf fps=1/${effectiveInterval}`, `-frames:v ${maxFrames}`, '-q:v 3'])
         .output(outputPattern)
-        .on('error', (error: Error, _stdout: string, stderr: string) => reject(new Error(stderr || error.message)))
+        .on('error', reject)
         .on('end', () => resolve())
         .run();
     });
@@ -342,6 +342,36 @@ export class MediaRepository {
       .filter((f) => f.startsWith('frame_') && f.endsWith('.jpg'))
       .sort()
       .map((f) => path.join(outputDir, f));
+  }
+
+  /**
+   * Extracts one frame per timestamp by seeking directly to each position.
+   * Used when keyframe metadata is available and keyframes are dense enough to
+   * replace uniform interval sampling — gives accurate timestamps and avoids
+   * decoding non-keyframes between sample points.
+   *
+   * @param videoPath absolute path to the source video
+   * @param outputDir directory to write the extracted JPEGs into; must exist before calling
+   * @param timestampsMs timestamps in milliseconds at which to extract frames
+   * @returns sorted list of absolute paths to the extracted JPEG files
+   */
+  async extractKeyframesAtTimestamps(videoPath: string, outputDir: string, timestampsMs: number[]): Promise<string[]> {
+    const paths: string[] = [];
+    for (let i = 0; i < timestampsMs.length; i++) {
+      const outputPath = path.join(outputDir, `frame_${String(i).padStart(4, '0')}.jpg`);
+      const seekSecs = timestampsMs[i] / 1000;
+      await new Promise<void>((resolve, reject) => {
+        ffmpeg(videoPath)
+          .seekInput(seekSecs)
+          .outputOptions(['-frames:v 1', '-q:v 3'])
+          .output(outputPath)
+          .on('error', reject)
+          .on('end', () => resolve())
+          .run();
+      });
+      paths.push(outputPath);
+    }
+    return paths;
   }
 
   /**

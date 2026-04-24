@@ -438,12 +438,28 @@ export class PersonService extends BaseService {
     let tempDir: string | undefined;
     try {
       tempDir = await this.storageRepository.createTempDir('immich-video-faces-');
-      const framePaths = await this.mediaRepository.extractVideoFrames(
-        asset.originalPath,
-        tempDir,
-        videoFrameInterval,
-        videoMaxFrames,
-      );
+
+      let framePaths: string[];
+      let frameTimestampsMs: number[];
+
+      const keyframeSampleTimestamps = this.sampleKeyframeTimestamps(asset, videoFrameInterval, videoMaxFrames);
+      if (keyframeSampleTimestamps) {
+        this.logger.debug(`Using keyframe-aware sampling for video ${id} (${keyframeSampleTimestamps.length} keyframes)`);
+        framePaths = await this.mediaRepository.extractKeyframesAtTimestamps(
+          asset.originalPath,
+          tempDir,
+          keyframeSampleTimestamps,
+        );
+        frameTimestampsMs = keyframeSampleTimestamps;
+      } else {
+        framePaths = await this.mediaRepository.extractVideoFrames(
+          asset.originalPath,
+          tempDir,
+          videoFrameInterval,
+          videoMaxFrames,
+        );
+        frameTimestampsMs = framePaths.map((_, i) => i * videoFrameInterval * 1000);
+      }
 
       if (framePaths.length === 0) {
         this.logger.debug(`No frames extracted for video ${id}`);
@@ -456,8 +472,7 @@ export class PersonService extends BaseService {
 
       for (let frameIndex = 0; frameIndex < framePaths.length; frameIndex++) {
         const framePath = framePaths[frameIndex];
-        // Frame 0 is at 0 ms; each subsequent frame is videoFrameInterval seconds later.
-        const timestampMs = frameIndex * videoFrameInterval * 1000;
+        const timestampMs = frameTimestampsMs[frameIndex];
 
         const { imageHeight, imageWidth, faces } = await this.machineLearningRepository.detectFaces(
           framePath,
@@ -565,6 +580,38 @@ export class PersonService extends BaseService {
     await this.jobRepository.queueAll([{ name: JobName.FacialRecognitionQueueAll, data: { force: false } }, ...jobs]);
 
     return JobStatus.Success;
+  }
+
+  /**
+   * Returns timestamps (ms) sampled from the asset's keyframe metadata when the keyframes are
+   * dense enough to replace fixed-interval sampling, or null to fall back to fps-based extraction.
+   *
+   * "Dense enough" means the average keyframe interval is no more than twice the desired frame
+   * interval — e.g. with a 2s desired interval, keyframes must average ≤ 4s apart.
+   */
+  private sampleKeyframeTimestamps(
+    asset: { keyframe: { pts: number[]; totalDuration: number } | null; videoTimeBase: number | null | undefined },
+    videoFrameInterval: number,
+    videoMaxFrames: number,
+  ): number[] | null {
+    const { keyframe, videoTimeBase } = asset;
+    if (!keyframe || !videoTimeBase || keyframe.pts.length === 0) {
+      return null;
+    }
+
+    const avgIntervalSecs = keyframe.totalDuration / keyframe.pts.length / videoTimeBase;
+    if (avgIntervalSecs > videoFrameInterval * 2) {
+      return null;
+    }
+
+    // Sample up to videoMaxFrames pts values spread evenly across the keyframe list.
+    const { pts } = keyframe;
+    const step = pts.length <= videoMaxFrames ? 1 : Math.floor(pts.length / videoMaxFrames);
+    const selected: number[] = [];
+    for (let i = 0; i < pts.length && selected.length < videoMaxFrames; i += step) {
+      selected.push(Math.round((pts[i] / videoTimeBase) * 1000));
+    }
+    return selected;
   }
 
   // Returns cosine distance (1 − cosine similarity). 0 = identical direction, 1 = orthogonal.

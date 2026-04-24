@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Kysely, sql } from 'kysely';
-import { jsonArrayFrom } from 'kysely/helpers/postgres';
+import { jsonArrayFrom, jsonObjectFrom } from 'kysely/helpers/postgres';
 import { InjectKysely } from 'nestjs-kysely';
 import { columns } from 'src/database';
 import { DummyValue, GenerateSql } from 'src/decorators';
@@ -240,6 +240,19 @@ export class AssetJobRepository {
     return this.db
       .selectFrom('asset')
       .select(['asset.id', 'asset.originalPath', 'asset.visibility'])
+      .leftJoin('asset_keyframe', 'asset_keyframe.assetId', 'asset.id')
+      .leftJoin('asset_video', 'asset_video.assetId', 'asset.id')
+      .select((eb) =>
+        jsonObjectFrom(
+          eb
+            .selectFrom('asset_keyframe as kf')
+            .select(['kf.pts', 'kf.totalDuration'])
+            .whereRef('kf.assetId', '=', 'asset.id'),
+        )
+          .$castTo<{ pts: number[]; totalDuration: number } | null>()
+          .as('keyframe'),
+      )
+      .select('asset_video.timeBase as videoTimeBase')
       .where('asset.id', '=', id)
       .where('asset.type', '=', sql.lit(AssetType.Video))
       .executeTakeFirst();

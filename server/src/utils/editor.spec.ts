@@ -66,6 +66,7 @@ const createFace = (params: Partial<AssetFace> = {}): AssetFace => ({
   imageHeight: 1000,
   personId: null,
   sourceType: SourceType.MachineLearning,
+  timestampMs: null,
   person: null,
   updatedAt: new Date(),
   updateId: 'update-id',
