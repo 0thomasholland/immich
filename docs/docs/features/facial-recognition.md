@@ -112,3 +112,5 @@ After changing this setting you can re-run **Video Face Detection** from the Job
 ### Video face detection max frames
 
 The maximum number of frames sampled per video, regardless of video length. The default is 50. This cap prevents very long videos from generating an excessive number of face records. The allowed range is 1–500 frames.
+
+When a video is long enough that the configured interval would exceed this cap, the interval is automatically widened so that the sampled frames are distributed evenly across the full video. For example, with the default settings (2-second interval, 50-frame cap), a 10-minute video would be sampled every ~12 seconds (one frame at 0 s, one at 600 s, and 48 evenly spaced frames in between), rather than stopping after the first 100 seconds.
