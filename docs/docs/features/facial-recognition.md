@@ -42,6 +42,8 @@ Because many of these frames will show the same person from slightly different a
 
 This means that a person who appears throughout a long video contributes exactly one face record to the recognition stage, rather than dozens of near-identical records that could skew clustering results.
 
+When keyframe metadata is available for a video (stored during initial indexing), Immich will use it to pick sample points more efficiently. Rather than decoding every frame up to the sample point, it seeks directly to the nearest keyframe. This path is only taken when the keyframes are dense enough to be useful — specifically, when the average interval between keyframes is no more than twice the configured frame interval (e.g. with the default 2-second interval, keyframes must average ≤ 4 seconds apart). If the keyframes are too sparse, Immich falls back to the standard fixed-interval FFmpeg extraction.
+
 ## How Facial Recognition Works
 
 The facial recognition algorithm we use is derived from [DBSCAN](https://www.youtube.com/watch?v=RDZUdRSDOok), a popular clustering algorithm. It essentially treats each detected face as a point in a graph and aims to group points that are close to each other.
